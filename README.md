@@ -2,7 +2,7 @@
 
 Học kỳ 1, Năm học 2024-2025
 
-**Tên dự án**:Quản lý mượn sách
+**Tên dự án**:Quản lý mượn sách - BACKEND
 
 **MSSV**: B2007421
 
