@@ -1,112 +1,63 @@
-const ApiError = require("../api-error");
+
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const NhanVienService = require("../services/nhanvien.services");
 const MongoDB = require("../utils/mongodb.utils");
 
-
-exports.create = async (req, res, next) => {
-    if (!req.body?.name) {
-        return next(new ApiError(400, "Name can not be empty"));
-    }
-    try {
-        const nhanvienService = new NhanVienService(MongoDB.client);
-        const document = await nhanvienService.create(req.body);
-        return res.send(document);
-    } catch (error) {
-        console.error("Error during create operation:", error); // Log lỗi
-        return next(
-            new ApiError(500, "An error occurred while creating the contact")
-        );
-    }
-}
-
-exports.findAll = async (req, res, next) => {
-  let documents = [];
-
+// Đăng ký
+exports.register = async (req, res) => {
   try {
-    const nhanvienService = new NhanVienService(MongoDB.client);
-    const {name} = req.query;
-    if(name){
-        documents = await nhanvienService.findByName(name);
-    } else{
-        documents = await nhanvienService.find({});
+    const { msnv, hotennv, password, diachi, sdtnv } = req.body;
+
+    // Kết nối tới cơ sở dữ liệu
+      // const nhanvien = new NhanVienService(MongoDB.client);
+      // const document = await nhanvien.register(req.body);
+    await client.connect();
+    const database = client.db("QuanLyMuonSach");
+    const collection = database.collection("nhanvien");
+
+    // Kiểm tra xem mã số nhân viên đã tồn tại chưa
+    const existingUser = await collection.findOne({ msnv });
+    if (existingUser) {
+      return res.status(400).json({ message: "Nhân viên đã tồn tại!" });
     }
+
+    // Thêm nhân viên mới
+    const result = await collection.insertOne({
+      msnv,
+      hotennv,
+      password,
+      diachi,
+      sdtnv,
+    });
+
+    res.status(201).json({ message: "Đăng ký thành công", data: result });
   } catch (error) {
-    return next(
-        new ApiError(500, "An error occurred while retrieving contacts")
-    );
+    console.error("Lỗi trong API /register:", error);
+    res.status(500).json({ message: "Lỗi server" });
+  } finally {
+    await client.close();
   }
-  return res.send(documents);
 };
-exports.findOne = async (req, res, next) => {
- try {
-     const nhanvienService = new NhanVienService(MongoDB.client);
-     const document = await nhanvienService.findById(req.params.id);
-     if(!document){
-        return next(new ApiError(404, "Contact not found"));
-     }
-     return res.send(document);
- } catch (error) {
-    return next(
-        new ApiError(500, `Error retrieving contact with id=${req.params.id}`)
-    );
- }
-};
-exports.update = async (req, res, next) => {
-  if(Object.keys(req.body).length == 0){
-    return next(new ApiError(400, "Data to update can not be empty"));
-  }
 
+// Đăng nhập
+exports.login = async (req, res) => {
+  const { msnv, password } = req.body;
+  
   try {
-    const nhanvienService = new NhanVienService(MongoDB.client);
-    const document = await nhanvienService.update(req.params.id, req.body);
-    if(!document){
-        return next(new ApiError(404, "Contact not found"));
+    const user = await NhanVien.findOne({ msnv });
+    if (!user) {
+      return res.status(400).json({ message: "Nhân viên không tồn tại!" });
     }
-    return res.send({message: "Contact was updated successfuly"});
+    
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Mật khẩu sai!" });
+    }
+    
+    const token = jwt.sign({ msnv: user.msnv }, "secretkey", { expiresIn: "1h" });
+    res.json({ token });
   } catch (error) {
-    return next(
-        new ApiError(500, `Error updating contact with id=${req.params.id}`)
-    );
+    res.status(500).json({ message: "Lỗi server!" });
   }
-};
-exports.delete = async (req, res, next) => {
- try {
-      const nhanvienService = new NhanVienService(MongoDB.client);
-      const document = await nhanvienService.delete(req.params.id);
-      if(!document){
-        return next(new ApiError(404, "Contact not found"));
-      }
-      return res.send({message: "Contact was deleted successfuly"});
- } catch (error) {
-    return next(
-        new ApiError(
-            500, `Could not delete contact with id=${req.params.id}`
-        )
-    );
- }
-};
-exports.deleteAll = async (req, res, next) => {
-  try {
-      const nhanvienService = new NhanVienService(MongoDB.client);
-      const deleteCount = await nhanvienService.deleteAll();
-
-      return res.send(`${deleteCount} contact were deleted successfuly`);
- } catch (error) {
-    return next(
-        new ApiError(
-            500, "An error occurred while removing all contacts"
-        )
-    );
- }
-};
-exports.findAllFavorite = async (_req, res, next) => {
-   try {
-      const nhanvienService = new NhanVienService(MongoDB.client);
-      const document = await nhanvienService.findFavorite();
-      return res.send(document);
- } catch (error) {
-    return next(
-        new ApiError(500, "An error occurred while retrieving favorite contacts")
-    );
- }
 };

@@ -2,18 +2,17 @@ const {ObjectId, ReturnDocument} = require("mongodb");
 
 class NhanVienService {
     constructor(client){
-        this.NhanVien = client.db().collection("NHANVIEN");
+        this.NhanVien = client.db().collection("nhanvien");
     }
 
     //csdl su dung mongodb api
     extractNhanVienData(payload) {
         const nhanvien = {
-            MSNV: payload.MSNV,
-            HOTENNV: payload.HOTENNV,
-            PASSWORD: payload.PASSWORD,
-            CHUCVU: payload.CHUCVU,
-            DIACHI: payload.DIACHI,
-            SODIENTHOAI: payload.SODIENTHOAI,
+            msnv: payload.msnv,
+            hotennv: payload.hotennv,
+            password: payload.password,
+            diachi: payload.diachi,
+            sdtnv: payload.sdtnv,
 
         };
 

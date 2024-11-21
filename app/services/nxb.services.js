@@ -2,7 +2,7 @@ const {ObjectId, ReturnDocument} = require("mongodb");
 
 class NxbService {
     constructor(client){
-        this.Nxb = client.db().collection("NHAXUATBAN");
+        this.Nxb = client.db().collection("nhaxuatban");
     }
 
     //csdl su dung mongodb api

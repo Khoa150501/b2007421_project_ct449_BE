@@ -1,112 +1,38 @@
-const ApiError = require("../api-error");
-const DocGiaService = require("../services/docgia.services");
-const MongoDB = require("../utils/mongodb.utils");
+const { ObjectId } = require('mongodb');
+const getDb = require('../utils/db');
 
-
-exports.create = async (req, res, next) => {
-    if (!req.body?.name) {
-        return next(new ApiError(400, "Name can not be empty"));
-    }
+// Lấy danh sách tất cả độc giả
+exports.getAllDocgia = async (req, res) => {
     try {
-        const docgiaService = new DocGiaService(MongoDB.client);
-        const document = await docgiaService.create(req.body);
-        return res.send(document);
+        const db = getDb();
+    const docgiaList = db.collection('docgia');
+        // const docgiaList = await db.collection('docgia').find().toArray();
+        res.status(200).json(docgiaList);
     } catch (error) {
-        console.error("Error during create operation:", error); // Log lỗi
-        return next(
-            new ApiError(500, "An error occurred while creating the contact")
-        );
+        res.status(500).json({ error: "Không thể lấy danh sách độc giả." });
     }
-}
+};
 
-exports.findAll = async (req, res, next) => {
-  let documents = [];
-
-  try {
-    const docgiaService = new DocGiaService(MongoDB.client);
-    const {name} = req.query;
-    if(name){
-        documents = await docgiaService.findByName(name);
-    } else{
-        documents = await docgiaService.find({});
+// Thêm mới độc giả
+exports.addDocgia = async (req, res) => {
+    try {
+        const db = getDb();
+        const newDocgia = req.body;
+        await db.collection('docgia').insertOne(newDocgia);
+        res.status(201).json({ message: "Độc giả đã được thêm thành công." });
+    } catch (error) {
+        res.status(500).json({ error: "Không thể thêm độc giả." });
     }
-  } catch (error) {
-    return next(
-        new ApiError(500, "An error occurred while retrieving contacts")
-    );
-  }
-  return res.send(documents);
 };
-exports.findOne = async (req, res, next) => {
- try {
-     const docgiaService = new DocGiaService(MongoDB.client);
-     const document = await docgiaService.findById(req.params.id);
-     if(!document){
-        return next(new ApiError(404, "Contact not found"));
-     }
-     return res.send(document);
- } catch (error) {
-    return next(
-        new ApiError(500, `Error retrieving contact with id=${req.params.id}`)
-    );
- }
-};
-exports.update = async (req, res, next) => {
-  if(Object.keys(req.body).length == 0){
-    return next(new ApiError(400, "Data to update can not be empty"));
-  }
 
-  try {
-    const docgiaService = new DocGiaService(MongoDB.client);
-    const document = await docgiaService.update(req.params.id, req.body);
-    if(!document){
-        return next(new ApiError(404, "Contact not found"));
+// Xóa độc giả
+exports.deleteDocgia = async (req, res) => {
+    try {
+        const db = getDb();
+        const { id } = req.params;
+        await db.collection('docgia').deleteOne({ _id: ObjectId(id) });
+        res.status(200).json({ message: "Độc giả đã được xóa thành công." });
+    } catch (error) {
+        res.status(500).json({ error: "Không thể xóa độc giả." });
     }
-    return res.send({message: "Contact was updated successfuly"});
-  } catch (error) {
-    return next(
-        new ApiError(500, `Error updating contact with id=${req.params.id}`)
-    );
-  }
-};
-exports.delete = async (req, res, next) => {
- try {
-      const docgiaService = new DocGiaService(MongoDB.client);
-      const document = await docgiaService.delete(req.params.id);
-      if(!document){
-        return next(new ApiError(404, "Contact not found"));
-      }
-      return res.send({message: "Contact was deleted successfuly"});
- } catch (error) {
-    return next(
-        new ApiError(
-            500, `Could not delete contact with id=${req.params.id}`
-        )
-    );
- }
-};
-exports.deleteAll = async (req, res, next) => {
-  try {
-      const docgiaService = new DocGiaService(MongoDB.client);
-      const deleteCount = await docgiaService.deleteAll();
-
-      return res.send(`${deleteCount} contact were deleted successfuly`);
- } catch (error) {
-    return next(
-        new ApiError(
-            500, "An error occurred while removing all contacts"
-        )
-    );
- }
-};
-exports.findAllFavorite = async (_req, res, next) => {
-   try {
-      const docgiaService = new DocGiaService(MongoDB.client);
-      const document = await docgiaService.findAllFavorite();
-      return res.send(document);
- } catch (error) {
-    return next(
-        new ApiError(500, "An error occurred while retrieving favorite contacts")
-    );
- }
 };

@@ -2,7 +2,7 @@ const {ObjectId, ReturnDocument} = require("mongodb");
 
 class BooksService {
     constructor(client){
-        this.Book = client.db().collection("SACH");
+        this.Book = client.db().collection("sach");
     }
 
     //csdl su dung mongodb api
