@@ -1,74 +1,45 @@
-const {ObjectId, ReturnDocument} = require("mongodb");
+const { ObjectId } = require("mongodb");
 
-class BooksService {
-    constructor(client){
-        this.Book = client.db().collection("sach");
-    }
+class BookService {
+  constructor(client) {
+    this.Book = client.db().collection("sach");
+  }
 
-    //csdl su dung mongodb api
-    extractBooksData(payload) {
-        const books = {
-            MASACH: payload.MASACH,
-            TENSACH: payload.TENSACH,
-            DONGIA: payload.DONGIA,
-            SOQUYEN: payload.SOQUYEN,
-            NAMXUATBAN: payload.NAMXUATBAN,
-            MANXB: payload.MANXB,
-        };
+  // Lấy dữ liệu từ payload
+  extractBookData(payload) {
+    const book = {
+      masach: payload.masach,
+      tensach: payload.tensach,
+      dongia: payload.dongia,
+      soquyen: payload.soquyen,
+      namxb: payload.namxb,
+      maxb: payload.maxb,
+      tacgia: payload.tacgia,
+    };
+    Object.keys(book).forEach(
+      (key) => book[key] === undefined && delete book[key]
+    );
+    return book;
+  }
 
-        Object.keys(books).forEach(
-            (key) => books[key] == undefined && delete books[key]
-        );
-        return books;
-    }
+ async search(query) {
+    const regex = new RegExp(query, "i");  // Sử dụng biểu thức chính quy không phân biệt hoa/thường
+    return await this.Book.find({
+      $or: [
+        { masach: { $regex: regex } },
+        { tensach: { $regex: regex } },
+        { tacgia: { $regex: regex } },
+        { namxb: { $regex: regex } },
+        { maxb: { $regex: regex } },
+      ]
+    }).toArray();
+  }
 
-    async create(payload) {
-        const books = this.extractBooksData(payload);
-        const result = await this.Book.findOneAndUpdate(
-             books,
-            {$set: {favorite: books.favorite == true}},
-            {returnDocument: "after", upsert: true}
-        );
-        return result;
-    }
-    //
-    async find(filter){
-        const cursor = await this.Book.find(filter);
-        return await cursor.toArray();
-    }
-    async findByName(name){
-        return await this.find({
-            name: { $regex: new RegExp(new RegExp(name)), $options: "i" },
-        });
-    }
-    async findById(id){
-        return await this.Book.findOne({
-            _id: ObjectId.isValid(id) ? new ObjectId(id) : null,
-        });
-    }
-    async update(id, payload){
-        const filter = {
-            _id: ObjectId.isValid(id) ? new ObjectId(id) : null,
-        };
-        const update = this.extractContactData(payload);
-        const result = await this.Book.findOneAndUpdate(
-            filter, {$set: update},
-                    {returnDocument: "after"}
-        );
-        return result.value;
-    }
-    async delete(id){
-        const result = await this.Book.findOneAndDelete({
-            _id: ObjectId.isValid(id) ? new ObjectId(id) : null,
-        });
-        return result;
-    }
-    async findFavorite(){
-        return await this.find({favorite: true});
-    }
-    async deleteAll(){
-        const result = await this.Book.deleteMany({});
-        return result.deleteCount;
-    }
+  // Hàm lấy tất cả sách
+  async getAllBooks() {
+    const cursor = await this.Book.find();
+    return await cursor.toArray();
+  }
 }
-module.exports = BooksService;
+
+module.exports = BookService;

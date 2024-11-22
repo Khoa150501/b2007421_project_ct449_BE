@@ -1,19 +1,20 @@
-const express = require("express");
-const books = require("../controllers/book.controllers");
-
+const express = require('express');
 const router = express.Router();
+const bookController = require('../controllers/book.controllers');
 
-router.route("/")
-    .get(books.findAll)
-    .post(books.create)
-    .delete(books.deleteAll);
+// Get all books
+router.get('/', bookController.getAllBooks);
 
-router.route("/MASACH")
-    .get(books.findAllFavorite);
+//search
+router.get('/search', bookController.searchBooks);
 
-router.route("./:id")
-.get(books.findOne)
-.put(books.update)
-.delete(books.delete);
+// Add a new book
+router.post('/api/books', bookController.addBook);
+
+// Update a book
+router.put('/api/books/:id', bookController.updateBook);
+
+// Delete a book
+router.delete('/api/books/:id', bookController.deleteBook);
 
 module.exports = router;

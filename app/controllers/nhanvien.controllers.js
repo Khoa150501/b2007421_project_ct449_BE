@@ -9,9 +9,6 @@ exports.register = async (req, res) => {
   try {
     const { msnv, hotennv, password, diachi, sdtnv } = req.body;
 
-    // Kết nối tới cơ sở dữ liệu
-      // const nhanvien = new NhanVienService(MongoDB.client);
-      // const document = await nhanvien.register(req.body);
     await client.connect();
     const database = client.db("QuanLyMuonSach");
     const collection = database.collection("nhanvien");

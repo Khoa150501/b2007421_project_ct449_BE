@@ -1,15 +1,10 @@
 const express = require('express');
-const docgiaController = require('../controllers/docgia.controllers');
-
 const router = express.Router();
+const readerController = require('../controllers/docgia.controllers');
 
-// Lấy danh sách độc giả
-router.get('/', docgiaController.getAllDocgia);
-
-// Thêm độc giả mới
-router.post('/', docgiaController.addDocgia);
-
-// Xóa độc giả
-router.delete('/:id', docgiaController.deleteDocgia);
+router.get('/', readerController.getAllReaders); // Lấy danh sách độc giả
+router.post('/', readerController.createReader); // Thêm độc giả
+router.put('/:id', readerController.updateReader); // Sửa thông tin độc giả
+router.delete('/:id', readerController.deleteReader); // Xóa độc giả
 
 module.exports = router;
